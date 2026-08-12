@@ -61,7 +61,11 @@ config obsolete, not diverge from it without a documented reason.
    see `phpstan/base.neon`'s own comments for why relative paths inside a
    shared neon file break once it's consumed as a dependency.
 4. Copy `templates/workflows/ci.yml` (and `release.yml` if the repo's
-   differs meaningfully from the template).
+   differs meaningfully from the template). Check the target repo's
+   actual default branch first (`main` vs `master`) and update the
+   template's `branches:` filters to match, or the new jobs silently
+   never run — found this the hard way on `silver-assist-post-revalidate`
+   via PR review, not before pushing.
 5. Run `vendor/bin/phpcs` and `vendor/bin/phpstan` **before and after** —
    diff the violation list. For repos moving from a weaker base
    (`WordPress-Core`, or the minimal `WordPress-Extra`+`I18n` set), expect

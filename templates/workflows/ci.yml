@@ -6,6 +6,12 @@ permissions:
 # Calls this package's reusable quality-checks.yml so the actual check
 # logic lives in one place (SilverAssist/wp-coding-standards) instead of
 # being copy-pasted per plugin.
+#
+# Before copying: check the target repo's actual default branch (`main`
+# vs `master`) and update the two `branches:` filters below to match --
+# a mismatch here means these jobs silently never run on push/PR against
+# the default branch. Found the hard way on silver-assist-post-revalidate,
+# whose default branch is `master`.
 
 on:
   push:
@@ -21,7 +27,11 @@ jobs:
     with:
       php-version: "8.2"
       skip-wp-setup: false
-      upload-coverage: true
+      # Only set true if the target repo's phpunit run actually generates
+      # coverage.xml (e.g. phpunit.xml.dist has a <coverage> clover
+      # report configured) -- quality-checks.yml uploads that exact path
+      # and silently no-ops otherwise.
+      upload-coverage: false
 
   quality-checks-83:
     name: Quality Checks (PHP 8.3)
