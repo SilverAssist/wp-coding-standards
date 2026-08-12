@@ -1,0 +1,71 @@
+name: Release
+permissions:
+  contents: write
+
+# Template — copy into a consuming plugin repo as .github/workflows/release.yml.
+# Assumes a single root *.php main plugin file with `Version:` header and a
+# `define('..._VERSION', ...)` constant that must match the pushed tag.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g., v1.0.0)"
+        required: true
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate version consistency
+        run: |
+          TAG_VERSION="${{ github.event.inputs.tag || github.ref_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+
+          PLUGIN_VERSION=$(grep -m1 "Version:" *.php | awk '{print $3}')
+          CONST_VERSION=$(grep "define.*VERSION" *.php | head -1 | cut -d"'" -f2)
+
+          if [ "$TAG_VERSION" != "$PLUGIN_VERSION" ] || [ "$TAG_VERSION" != "$CONST_VERSION" ]; then
+            echo "Version mismatch!"
+            echo "Tag: $TAG_VERSION"
+            echo "Plugin header: $PLUGIN_VERSION"
+            echo "Constant: $CONST_VERSION"
+            exit 1
+          fi
+
+  quality-checks:
+    name: Quality Checks
+    needs: validate
+    uses: SilverAssist/wp-coding-standards/.github/workflows/quality-checks.yml@v1
+    with:
+      php-version: "8.3"
+      skip-wp-setup: false
+      upload-coverage: false
+
+  build:
+    name: Build Release
+    needs: quality-checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl
+          coverage: none
+      - run: composer install --no-dev --no-interaction --no-progress --optimize-autoloader
+      - name: Build release
+        run: |
+          TAG_VERSION="${{ github.event.inputs.tag || github.ref_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          bash scripts/build-release.sh "$TAG_VERSION"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: build/*.zip
+          generate_release_notes: true

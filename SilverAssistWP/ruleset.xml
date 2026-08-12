@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<ruleset name="SilverAssistWP">
+    <description>
+        Shared WordPress Coding Standards ruleset for Silver Assist plugins.
+        Consumers reference this as `&lt;rule ref="SilverAssistWP"/&gt;` from
+        their own thin phpcs.xml (see this package's README for the exact
+        snippet, including the per-plugin PrefixAllGlobals block that cannot
+        live here).
+
+        Deliberately does NOT layer silverassist/coding-standards' PSR-12
+        "SilverAssist" ruleset on top: WordPress-Extra's formatting rules
+        (tabs, brace placement, spacing) are a different, incompatible
+        convention from PSR-12, and WordPress-Extra is the correct authority
+        for a WordPress plugin. The dependency on silverassist/coding-standards
+        exists for the shared PHPStan base (phpstan/base.neon) and to pin
+        both packages' tooling versions (php_codesniffer, phpstan) together
+        — not for PHPCS rule composition.
+    </description>
+
+    <!-- Show progress and colors. -->
+    <arg value="ps"/>
+    <arg name="colors"/>
+
+    <!-- Check code for cross-version PHP compatibility. -->
+    <config name="testVersion" value="8.2-"/>
+
+    <!-- Base: WordPress-Extra, with exclusions for PSR-4 file/class naming
+         (Silver Assist plugins use PascalCase.php matching class names,
+         not WordPress's hyphenated-lowercase file naming) and K&R brace
+         style (opening braces on the same line). -->
+    <rule ref="WordPress-Extra">
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="Generic.Functions.OpeningFunctionBraceKernighanRitchie"/>
+        <exclude name="Generic.Classes.OpeningBraceSameLine"/>
+    </rule>
+
+    <!-- Short array syntax ([]) is allowed; WordPress-Extra's ban on it is
+         excluded above, this makes the allowance explicit too. -->
+    <rule ref="Universal.Arrays.DisallowShortArraySyntax">
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax.Found"/>
+    </rule>
+
+    <rule ref="WordPress-Docs"/>
+    <rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>
+    <rule ref="Generic.Commenting.Todo"/>
+
+    <config name="minimum_supported_wp_version" value="6.5"/>
+</ruleset>

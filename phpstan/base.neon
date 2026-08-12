@@ -1,0 +1,35 @@
+# Deliberately empty of `parameters:` — silver-assist-security (the one
+# real precedent in the org for a plugin composing PHPStan config across
+# SilverAssist packages) doesn't use `scanDirectories: [vendor]` either;
+# it lists precise `stubFiles`
+# instead (e.g. vendor/axepress/wp-graphql-stubs/wp-graphql-stubs.php).
+# `scanDirectories` also has the exact same relative-path resolution bug
+# as `includes:` below — found the same way, by actually running
+# `vendor/bin/phpstan` against wp-plugin-kernel and hitting "Scanned
+# directory .../phpstan/vendor does not exist". A consuming plugin that
+# needs extra stub files should list them explicitly in its own
+# `phpstan.neon`, the same way silver-assist-security does.
+#
+# Deliberately does NOT `includes:` silverassist/coding-standards' base.neon
+# or szepeviktor/phpstan-wordpress's extension.neon from here, even though
+# conceptually this file "composes" both. PHPStan resolves relative
+# `includes:` paths relative to THIS file's own location on disk — which
+# works when this package is the project root (e.g. running `composer
+# test` inside wp-coding-standards itself) but breaks once this file is
+# consumed as a dependency: Composer flattens `silverassist/coding-standards`
+# and `szepeviktor/phpstan-wordpress` into the *consumer's* top-level
+# vendor/, not into a nested vendor/ inside this package (which doesn't
+# get its own `composer install` run at all in that scenario). A relative
+# `../vendor/...` path from here then points at a directory that doesn't
+# exist. Found by actually running `vendor/bin/phpstan` against a real
+# dependent package (wp-plugin-kernel).
+#
+# Consumers must `includes:` all three files directly, from their own
+# phpstan.neon (all relative to their own root, which is unambiguous):
+#
+#   includes:
+#       - vendor/silverassist/coding-standards/phpstan/base.neon
+#       - vendor/silverassist/wp-coding-standards/phpstan/base.neon
+#       - vendor/szepeviktor/phpstan-wordpress/extension.neon
+#
+# See this package's README for the full consumer snippet.
