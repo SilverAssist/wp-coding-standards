@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.5] - 2026-08-13
+
+### Fixed
+
+- Removed the static `"version"` field from `composer.json`. Packagist
+  treats an explicit `version` field as authoritative and silently skips
+  any tag whose name doesn't match it — since this field was left at
+  `1.1.0` through the 1.1.1-1.1.4 tags, **none of those releases (including
+  the critical fix above) ever actually reached Packagist**, and every
+  consumer's `composer update` kept silently resolving back to the buggy
+  1.1.0. Composer infers the version from the git tag on its own; a static
+  field is discouraged for exactly this reason.
+
 ## [1.1.4] - 2026-08-13
 
 ### Fixed
