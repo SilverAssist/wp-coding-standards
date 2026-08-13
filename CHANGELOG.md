@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2026-08-13
+
+### Fixed
+
+- **Critical**: `run-quality-checks.sh`'s check functions (`run_composer_validate`,
+  `run_phpcs`, `run_phpstan`, `run_phpunit`, `run_syntax_check`, shipped in
+  1.1.0-1.1.3) each ran the real command, then unconditionally printed a
+  success message as the function's last statement — which became the
+  function's return value regardless of whether the real command actually
+  failed. Combined with a `set -e`-inside-a-`||`-checked-call bash gotcha,
+  this meant **every check silently reported success even when it failed**.
+  Found via a real false-green CI run on `paubox-cf7`'s first adoption PR,
+  where `vendor/bin/phpunit` fatally errored but the job still showed
+  "✅ All quality checks passed!". Every function now explicitly checks its
+  command's exit code and returns/reports accordingly. If any repo adopted
+  the reusable workflow between 1.1.0 and this fix, re-run its CI.
+- `run_phpunit()` now exports `TESTSUITE=integration` whenever WP setup ran
+  — some consumers' `tests/bootstrap.php` gate `WP_UnitTestCase` loading
+  behind that variable so local unit-only runs can skip WP entirely;
+  without it, those repos' integration tests silently never ran under the
+  bug above, and would now correctly fail without this companion fix.
+
 ## [1.1.0] - 2026-08-13
 
 ### Added
