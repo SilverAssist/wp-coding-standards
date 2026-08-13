@@ -136,25 +136,48 @@ setup_wordpress_tests() {
 # Quality Check Functions
 ###############################################################################
 
+# Each function below explicitly captures its real command's exit code and
+# returns it. Do not restructure these to rely on a function's implicit
+# "last command" return value — a bare `real_command; print_success ...`
+# body silently reports success from the *print* statement instead, no
+# matter what real_command actually did. That shape shipped in 1.1.0-1.1.3
+# and every quality check (including phpunit) reported green regardless of
+# real failures — `set -e` does not aborts a function whose call site is
+# itself already exit-code-checked (e.g. `run_phpunit || failed+=(...)`),
+# a well-known but easy-to-miss bash `errexit` gotcha. Found via a real
+# false-green CI run on paubox-cf7's adoption PR.
+
 run_composer_validate() {
     print_header "📦 Validating composer.json and composer.lock"
     cd "$PROJECT_ROOT"
-    composer validate --strict
-    print_success "Composer files validated"
+    if composer validate --strict; then
+        print_success "Composer files validated"
+        return 0
+    fi
+    print_error "Composer validation failed"
+    return 1
 }
 
 run_phpcs() {
     print_header "🎨 Running PHPCS (Code Style Check)"
     cd "$PROJECT_ROOT"
-    vendor/bin/phpcs --warning-severity=0
-    print_success "PHPCS passed - No errors found"
+    if vendor/bin/phpcs --warning-severity=0; then
+        print_success "PHPCS passed - No errors found"
+        return 0
+    fi
+    print_error "PHPCS failed"
+    return 1
 }
 
 run_phpstan() {
     print_header "🔍 Running PHPStan (Static Analysis)"
     cd "$PROJECT_ROOT"
-    php -d memory_limit=1G vendor/bin/phpstan analyse "$SOURCE_DIR_RESOLVED/" --no-progress
-    print_success "PHPStan passed - No errors found"
+    if php -d memory_limit=1G vendor/bin/phpstan analyse "$SOURCE_DIR_RESOLVED/" --no-progress; then
+        print_success "PHPStan passed - No errors found"
+        return 0
+    fi
+    print_error "PHPStan failed"
+    return 1
 }
 
 run_phpunit() {
@@ -164,23 +187,42 @@ run_phpunit() {
     if [ "$SKIP_WP_SETUP" != "true" ]; then
         export WP_TESTS_DIR="${WP_TESTS_DIR:-/tmp/wordpress-tests-lib}"
         print_info "Using WordPress Test Suite: $WP_TESTS_DIR"
+        # A few consumers' tests/bootstrap.php gate WP_UnitTestCase loading
+        # behind TESTSUITE=integration (to let unit-only local runs skip WP
+        # entirely) — set it whenever WP setup actually ran. Consumers that
+        # don't check this variable are unaffected.
+        export TESTSUITE="${TESTSUITE:-integration}"
     fi
 
-    vendor/bin/phpunit --testdox
-    print_success "All tests passed"
+    if vendor/bin/phpunit --testdox; then
+        print_success "All tests passed"
+        return 0
+    fi
+    print_error "PHPUnit tests failed"
+    return 1
 }
 
 run_syntax_check() {
     print_header "🔍 Running PHP Syntax Check"
     cd "$PROJECT_ROOT"
 
+    local had_error=0
+
     print_info "Checking main plugin file..."
-    php -l "$MAIN_FILE"
+    php -l "$MAIN_FILE" || had_error=1
 
     print_info "Checking source files in ${SOURCE_DIR_RESOLVED}/..."
-    find "$SOURCE_DIR_RESOLVED" -name "*.php" -exec php -l {} \; | grep -v "No syntax errors" || true
+    while IFS= read -r -d '' file; do
+        php -l "$file" > /tmp/php-lint-output 2>&1 || had_error=1
+        grep -v "No syntax errors" /tmp/php-lint-output || true
+    done < <(find "$SOURCE_DIR_RESOLVED" -name "*.php" -print0)
 
-    print_success "All PHP files have valid syntax"
+    if [ "$had_error" -eq 0 ]; then
+        print_success "All PHP files have valid syntax"
+        return 0
+    fi
+    print_error "PHP syntax errors found"
+    return 1
 }
 
 ###############################################################################
