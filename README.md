@@ -91,6 +91,31 @@ Codecov upload) lives in one place instead of being copy-pasted per
 plugin — before this package, every plugin's `ci.yml`/`quality-checks.yml`
 was a near-identical hand copy that could silently drift.
 
+## Usage — Shared Scripts
+
+`scripts/install-wp-tests.sh` and `scripts/run-quality-checks.sh` are
+consumed directly from `vendor/` — no local copy needed in the consuming
+plugin, and the reusable `quality-checks.yml` workflow above already
+calls them this way:
+
+```bash
+bash vendor/silverassist/wp-coding-standards/scripts/install-wp-tests.sh wordpress_test root '' localhost latest
+bash vendor/silverassist/wp-coding-standards/scripts/run-quality-checks.sh
+```
+
+`run-quality-checks.sh` auto-detects the main plugin file (the root
+`*.php` file with a `Plugin Name:` header) and the source directory
+(first of `includes/`, `Includes/`, `src/` that exists — override with
+`SOURCE_DIR` if a plugin uses something else). Run `--help` for the full
+option list.
+
+`scripts/build-release.sh` and `scripts/update-version-simple.sh` are
+**not** included here yet — consuming plugins currently use genuinely
+different release-build strategies (explicit include-list with asset
+validation vs. rsync-with-excludes), and unifying them needs a design
+decision on which strategy becomes canonical, not just a file move. Each
+plugin still keeps its own copy of those two for now.
+
 ## Why not compose PHPCS rules from `silverassist/coding-standards`
 
 `WordPress-Extra`'s formatting conventions (tabs, brace placement,

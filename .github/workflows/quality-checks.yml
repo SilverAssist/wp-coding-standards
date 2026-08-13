@@ -65,16 +65,16 @@ jobs:
 
       - name: Install WordPress Test Suite (if needed)
         if: ${{ !inputs.skip-wp-setup }}
-        run: bash scripts/install-wp-tests.sh wordpress_test root 'root' localhost latest true
+        run: bash vendor/silverassist/wp-coding-standards/scripts/install-wp-tests.sh wordpress_test root 'root' localhost latest true
 
       - name: Run Quality Checks
         env:
           PHP_VERSION: ${{ inputs.php-version }}
         run: |
           if [ "${{ inputs.skip-wp-setup }}" = "true" ]; then
-            bash scripts/run-quality-checks.sh --skip-wp-setup all
+            bash vendor/silverassist/wp-coding-standards/scripts/run-quality-checks.sh --skip-wp-setup all
           else
-            bash scripts/run-quality-checks.sh all
+            bash vendor/silverassist/wp-coding-standards/scripts/run-quality-checks.sh all
           fi
 
       - name: Upload coverage to Codecov

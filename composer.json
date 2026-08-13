@@ -1,7 +1,7 @@
 {
     "name": "silverassist/wp-coding-standards",
     "description": "WordPress-plugin PHPCS ruleset, PHPStan config, and reusable CI/CD workflows for Silver Assist plugins. Requires silverassist/coding-standards for the framework-agnostic PSR-12 base.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "phpcodesniffer-standard",
     "license": "PolyForm-Noncommercial-1.0.0",
     "authors": [
