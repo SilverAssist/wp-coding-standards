@@ -32,9 +32,22 @@ before/after the swap) and `contact-form-to-api` (the minimal
 real violations, all fixed, not suppressed). `wp-settings-hub` also
 adopted the PHPCS side (its PHPStan setup is deliberately hand-rolled and
 was left alone — see "Migrating a consumer repo" below for why that
-matters). `leadgen-app-form`, `leadcapture-form`, `silver-assist-security`,
-and `wp-github-updater` are still on their own local rulesets as of this
-release — same migration playbook applies to each.
+matters).
+
+**Update (2026-08-13):** the PHPCS-ruleset migration is now complete on
+every plugin repo — `acf-clone-fields`, `leadgen-app-form`,
+`leadcapture-form`, `nextjs-graphql-hooks`, `paubox-cf7`, and
+`silver-assist-security` all adopted `<rule ref="SilverAssistWP"/>` since
+this section was first written. `wp-github-updater` (a package, not a
+plugin) is the one remaining consumer still on its own local ruleset —
+same migration playbook applies. Separately, as of this same date the CI
+workflow migration (`ci.yml`/`release.yml` calling this package's
+reusable `quality-checks.yml`) and the shared `scripts/install-wp-tests.sh`
+/`scripts/run-quality-checks.sh` adoption (see README's "Usage — Shared
+Scripts") are being rolled out across the same plugin set — check each
+repo's actual `.github/workflows/quality-checks.yml` and `scripts/`
+directory before assuming this doc's phase-1 (PHPCS-only) status is still
+the whole picture.
 
 ## Ground truth for "is this ruleset correct"
 
@@ -94,7 +107,12 @@ it's tagged — never silently edit an already-tagged version.
   requires.
 - `../wp-plugin-kernel` — the `LoadableInterface` architecture package,
   same standardization effort, unrelated to coding style.
-- The 7 consumer plugin repos: `../silver-assist-post-revalidate` and
-  `../contact-form-to-api` (migrated), `../wp-settings-hub` (PHPCS side
-  only, see above), `../wp-github-updater`, `../leadgen-app-form`,
-  `../leadcapture-form`, `../silver-assist-security` (not yet migrated).
+- Consumer plugin repos (PHPCS ruleset migrated): `../silver-assist-post-revalidate`,
+  `../contact-form-to-api`, `../acf-clone-fields`, `../leadgen-app-form`,
+  `../leadcapture-form`, `../nextjs-graphql-hooks`, `../paubox-cf7`,
+  `../silver-assist-security`.
+- `../wp-settings-hub` — PHPCS side only (see above); `../wp-github-updater` —
+  not yet migrated to either the PHPCS ruleset or the reusable CI workflow.
+- `../contentful-wordpress-plugins` — a monorepo of 3 sub-plugins, not on
+  `wp-plugin-kernel` or this package at all yet; blocked on GitHub write
+  access as of 2026-08-13, changes staged locally only.
