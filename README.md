@@ -93,15 +93,33 @@ was a near-identical hand copy that could silently drift.
 
 ## Usage — Shared Scripts
 
-`scripts/install-wp-tests.sh` and `scripts/run-quality-checks.sh` are
-consumed directly from `vendor/` — no local copy needed in the consuming
-plugin, and the reusable `quality-checks.yml` workflow above already
-calls them this way:
+`scripts/install-wp-tests.sh` and `scripts/run-quality-checks.sh` live in
+this package — the reusable `quality-checks.yml` workflow above calls
+them straight from `vendor/`:
 
 ```bash
 bash vendor/silverassist/wp-coding-standards/scripts/install-wp-tests.sh wordpress_test root '' localhost latest
 bash vendor/silverassist/wp-coding-standards/scripts/run-quality-checks.sh
 ```
+
+For anything in the consumer repo that isn't the reusable workflow
+itself — a CI job defined directly in the consumer's own `ci.yml` (see
+`templates/workflows/ci.yml`'s `compatibility` job), a `composer.json`
+script, local dev docs, or a `CONTRIBUTING.md` — add a thin wrapper at
+`scripts/install-wp-tests.sh` / `scripts/run-quality-checks.sh` instead
+of calling the `vendor/` path directly:
+
+```bash
+#!/usr/bin/env bash
+set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec bash "$SCRIPT_DIR/../vendor/silverassist/wp-coding-standards/scripts/run-quality-checks.sh" "$@"
+```
+
+This keeps `./scripts/run-quality-checks.sh` working for every existing
+doc and dev habit without each consumer maintaining a real copy of the
+script's logic — only these 4 lines are consumer-owned, not the ~300
+lines of actual behavior.
 
 `run-quality-checks.sh` auto-detects the main plugin file (the root
 `*.php` file with a `Plugin Name:` header) and the source directory

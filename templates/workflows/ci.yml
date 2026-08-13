@@ -12,6 +12,13 @@ permissions:
 # a mismatch here means these jobs silently never run on push/PR against
 # the default branch. Found the hard way on silver-assist-post-revalidate,
 # whose default branch is `master`.
+#
+# The `compatibility` job below calls `scripts/install-wp-tests.sh` — add
+# a thin wrapper at that path delegating to
+# vendor/silverassist/wp-coding-standards/scripts/install-wp-tests.sh
+# (see this package's README, "Usage — Shared Scripts") rather than a
+# full local copy, so any existing docs/dev commands referencing that
+# path keep working.
 
 on:
   push:
@@ -89,5 +96,5 @@ jobs:
           extensions: mbstring, intl, mysql, pdo_mysql
           coverage: none
       - run: composer install --no-interaction --no-progress --optimize-autoloader
-      - run: bash vendor/silverassist/wp-coding-standards/scripts/install-wp-tests.sh wordpress_test root 'root' 127.0.0.1 ${{ matrix.wordpress-version }} false
+      - run: bash scripts/install-wp-tests.sh wordpress_test root 'root' 127.0.0.1 ${{ matrix.wordpress-version }} false
       - run: vendor/bin/phpunit
