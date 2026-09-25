@@ -10,6 +10,9 @@
     }
   ],
   "minimum-stability": "stable",
+  "repositories": [
+    { "type": "vcs", "url": "https://github.com/SilverAssist/coding-standards" }
+  ],
   "require": {
     "php": ">=8.2",
     "silverassist/coding-standards": "^1.0",

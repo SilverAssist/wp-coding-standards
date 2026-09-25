@@ -61,7 +61,10 @@ config obsolete, not diverge from it without a documented reason.
 
 ## Migrating a consumer repo — checklist
 
-1. `composer require --dev silverassist/wp-coding-standards`.
+1. Declare `vcs` repositories for `silverassist/wp-coding-standards` and
+   `silverassist/coding-standards` in the repo's root `composer.json` (see
+   the README, "Installing via Composer"), then
+   `composer require --dev silverassist/wp-coding-standards`.
 2. Replace the repo's inline `WordPress-Extra`-based rules with
    `<rule ref="SilverAssistWP"/>` + that repo's own `PrefixAllGlobals`
    properties (these are plugin-specific and can't live in the shared
