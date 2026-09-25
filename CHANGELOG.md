@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.7] - 2026-09-25
+
+### Added
+
+- The reusable `quality-checks.yml` accepts an optional `COMPOSER_AUTH` secret and passes it to `composer install`, so a caller can read the private SilverAssist packages.
+
+### Changed
+
+- The workflow templates pass `secrets: inherit` to the reusable workflow and set `COMPOSER_AUTH` on their own `composer install` steps.
+- This repository's own CI and release workflows pass `COMPOSER_AUTH` to `composer install`, because its development dependency `coding-standards` is resolved from GitHub.
+
+### Documentation
+
+- README section "Authenticating Composer in CI".
+
 ## [1.1.6] - 2026-09-25
 
 ### Changed

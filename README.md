@@ -135,6 +135,17 @@ Codecov upload) lives in one place instead of being copy-pasted per
 plugin — before this package, every plugin's `ci.yml`/`quality-checks.yml`
 was a near-identical hand copy that could silently drift.
 
+### Authenticating Composer in CI
+
+The plugins install the SilverAssist packages from their GitHub repositories
+(see "Installing via Composer"), so the `composer install` inside the
+reusable workflow needs a token. Store the JSON
+`{"github-oauth":{"github.com":"<token>"}}` as a repository secret named
+`COMPOSER_AUTH` and pass it to the reusable workflow with `secrets: inherit`
+(the templates already do). The secret is optional in the workflow, so a
+caller that does not pass it keeps working while its repositories are public.
+The templates also set `COMPOSER_AUTH` on their own `composer install` steps.
+
 ## Usage — Shared Scripts
 
 `scripts/install-wp-tests.sh` and `scripts/run-quality-checks.sh` live in

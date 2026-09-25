@@ -42,6 +42,7 @@ jobs:
     name: Quality Checks
     needs: validate
     uses: SilverAssist/wp-coding-standards/.github/workflows/quality-checks.yml@v1
+    secrets: inherit
     with:
       php-version: "8.3"
       skip-wp-setup: false
@@ -59,6 +60,8 @@ jobs:
           extensions: mbstring, intl
           coverage: none
       - run: composer install --no-dev --no-interaction --no-progress --optimize-autoloader
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
       - name: Build release
         run: |
           TAG_VERSION="${{ github.event.inputs.tag || github.ref_name }}"
